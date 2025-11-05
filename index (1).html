@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+    <meta name="theme-color" content="#4F46E5">
+    <title>Platform Pembelajaran Online - Mobile Exam</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Network status indicator for offline-first UX -->
+    <div id="networkIndicator" style="display:none;" class="offline-indicator">Anda sedang offline — jawaban akan disimpan secara lokal dan disinkronkan saat online.</div>
+    <!-- Portrait lock message for smartphone exam -->
+    <div id="portraitLock" class="portrait-lock-message" style="display:none;">
+      <div class="portrait-icon">📱</div>
+      <h2>Putar perangkat ke mode potret</h2>
+      <p style="margin-top:8px;opacity:0.9;max-width:320px;">Ujian hanya dapat dikerjakan dalam orientasi potret untuk pengalaman optimal.</p>
+    </div>
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <div class="login-card">
+
+                <h1>Platform Soal Online</h1>
+                <p class="subtitle">Sistem Ujian Terintegrasi</p>
+                
+
+                
+                <div id="loginError" class="error-message" style="display: none; background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #DC2626;"></div>
+                <div id="loginSuccess" class="success-message" style="display: none; background: #D1FAE5; color: #059669; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #059669;"></div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" class="form-control" placeholder="Masukkan username" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" class="form-control" placeholder="Masukkan password" required autocomplete="current-password">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full" id="loginBtn" style="margin-top: 8px;">LOGIN</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="page">
+        <div class="admin-layout">
+            <!-- Mobile Overlay -->
+            <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileSidebar()"></div>
+            
+            <aside class="admin-sidebar" id="adminSidebar">
+                <div class="admin-brand">
+                    <button class="hamburger-menu" onclick="toggleMobileSidebar()" aria-label="Close menu">✕</button>
+                    Admin Panel
+                </div>
+                <nav class="admin-nav">
+                    <button class="admin-nav-btn active" data-admin-page="overview" onclick="showAdminPage('overview')">
+                        <span class="nav-icon">📊</span> Dashboard
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="subjects" onclick="showAdminPage('subjects')">
+                        <span class="nav-icon">📚</span> Rekap Mata Pelajaran
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="monitoring" onclick="showAdminPage('monitoring')">
+                        <span class="nav-icon">👥</span> Monitoring Kelas
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="manage" onclick="showAdminPage('manage')">
+                        <span class="nav-icon">⚙️</span> Manajemen Guru &amp; Kelas
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="settings" onclick="showAdminPage('settings')">
+                        <span class="nav-icon">🔒</span> Pengaturan Proctoring
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="download-center" onclick="showAdminPage('download-center')">
+                        <span class="nav-icon">📥</span> Download Soal &amp; Nilai
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="reports" onclick="showAdminPage('reports')">
+                        <span class="nav-icon">📄</span> Laporan &amp; Export
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="usergen" onclick="showAdminPage('usergen')">
+                        <span class="nav-icon">👥</span> Kelola User
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="passwords" onclick="showAdminPage('passwords')">
+                        <span class="nav-icon">🔑</span> Kelola Password
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="admin-settings" onclick="showAdminPage('admin-settings')">
+                        <span class="nav-icon">⚙️</span> Pengaturan Akun
+                    </button>
+                    <button class="admin-nav-btn" data-admin-page="qr-codes" onclick="showAdminPage('qr-codes')">
+                        <span class="nav-icon">📱</span> QR Code Login
+                    </button>
+                </nav>
+                <div class="admin-user-info">
+                    <span id="adminName">Admin</span>
+                    <button class="btn btn-sm btn-logout" onclick="logout()">Keluar</button>
+                </div>
+            </aside>
+            <main class="admin-main">
+                <!-- Mobile Header -->
+                <div class="mobile-admin-header" style="display: none;">
+                    <button class="hamburger-menu" onclick="toggleMobileSidebar()" aria-label="Open menu">☰</button>
+                    <span style="font-weight: 600; font-size: 18px;">Admin Panel</span>
+                </div>
+                <!-- Overview Page -->
+                <div id="adminOverview" class="admin-page active">
+                    <h1>Dashboard Admin</h1>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalGuru">0</div>
+                            <div class="stat-label">Total Guru</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalSiswa">0</div>
+                            <div class="stat-label">Total Siswa</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="ujianAktif">0</div>
+                            <div class="stat-label">Ujian Aktif</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="ujianSelesai">0</div>
+                            <div class="stat-label">Ujian Selesai Hari Ini</div>
+                        </div>
+                    </div>
+                    <div class="admin-section">
+                        <h2>📚 Mata Pelajaran (Belum Input Soal) ⚠️</h2>
+                        <div class="alert-box" id="mapelBelumInput"></div>
+                    </div>
+                    <div class="admin-section">
+                        <h2>👥 Siswa Sedang Ujian Hari Ini</h2>
+                        <div class="info-box" id="siswaUjian"></div>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn btn-primary" onclick="showAdminPage('monitoring')">Lihat Monitoring Kelas</button>
+                        <button class="btn btn-secondary" onclick="showAdminPage('subjects')">Rekap Mapel</button>
+                    </div>
+                </div>
+
+                <!-- Subjects Recap Page -->
+                <div id="adminSubjects" class="admin-page">
+                    <h1>Rekap Mata Pelajaran</h1>
+                    <div class="filter-section">
+                        <input type="text" id="subjectSearch" class="form-control" placeholder="Cari mata pelajaran..." oninput="filterSubjects()">
+                        <select id="classFilter" class="form-control" onchange="filterSubjects()">
+                            <option value="">Semua Kelas</option>
+                            <option value="X">Kelas X</option>
+                            <option value="XI">Kelas XI</option>
+                            <option value="XII">Kelas XII</option>
+                        </select>
+                        <select id="statusFilter" class="form-control" onchange="filterSubjects()">
+                            <option value="">Semua Status</option>
+                            <option value="SUDAH_INPUT">Sudah Input</option>
+                            <option value="BELUM_INPUT">Belum Input</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Mata Pelajaran</th>
+                                    <th>Kelas</th>
+                                    <th>Guru</th>
+                                    <th>Jumlah Soal</th>
+                                    <th>Status Input</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Monitoring Kelas Page -->
+                <div id="adminMonitoring" class="admin-page">
+                    <h1>Monitoring Kelas (Live Face Detection)</h1>
+                    <div class="monitoring-controls">
+                        <select id="monitoringClassFilter" class="form-control" onchange="filterMonitoringClass()">
+                            <option value="">Semua Kelas</option>
+                            <option value="X.1">X.1</option>
+                            <option value="X.2">X.2</option>
+                            <option value="XI.1">XI.1</option>
+                            <option value="XI.2">XI.2</option>
+                            <option value="XII.1">XII.1</option>
+                            <option value="XII.2">XII.2</option>
+                        </select>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()">
+                            Auto-Refresh (3s)
+                        </label>
+                        <button class="btn btn-secondary" onclick="refreshMonitoring()">🔄 Refresh Sekarang</button>
+                    </div>
+                    <div class="monitoring-status" id="monitoringStatus"></div>
+                    <div class="students-grid" id="studentsGrid"></div>
+                </div>
+
+                <!-- Manajemen Guru & Kelas Page -->
+                <div id="adminManage" class="admin-page">
+                    <h1>Manajemen Guru &amp; Kelas</h1>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Guru</th>
+                                    <th>Kelas</th>
+                                    <th>Mata Pelajaran</th>
+                                    <th>Soal Aktif</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manageTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pengaturan Proctoring Page -->
+                <div id="adminSettings" class="admin-page">
+                    <h1>Pengaturan Proctoring</h1>
+                    <div class="settings-form">
+                        <div class="setting-item">
+                            <label class="setting-label">Face Detection Required</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="faceDetectionRequired" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">Max Face Violations Before End</label>
+                            <input type="number" id="maxFaceViolations" class="form-control" value="5" min="1" max="10">
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">Max Tab-Switch Violations Before End</label>
+                            <input type="number" id="maxTabViolations" class="form-control" value="5" min="1" max="10">
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">Auto-Refresh Interval (detik)</label>
+                            <input type="number" id="autoRefreshInterval" class="form-control" value="3" min="1" max="10">
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">Enable Demo Mode</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="enableDemoMode" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSettings()">Simpan Pengaturan</button>
+                    </div>
+                </div>
+
+                <!-- Admin User Generator Page -->
+                <div id="adminUsergen" class="admin-page">
+                    <h1>Kelola User - Generate Username &amp; Password</h1>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="user-manager-tabs">
+                        <button class="user-tab-btn active" data-usertab="generate-guru" onclick="showUserTab('generate-guru')">Generate Guru</button>
+                        <button class="user-tab-btn" data-usertab="generate-siswa" onclick="showUserTab('generate-siswa')">Generate Siswa</button>
+                        <button class="user-tab-btn" data-usertab="template-import" onclick="showUserTab('template-import')">📥 Import Template</button>
+                        <button class="user-tab-btn" data-usertab="import-csv" onclick="showUserTab('import-csv')">Import CSV</button>
+                        <button class="user-tab-btn" data-usertab="add-manual" onclick="showUserTab('add-manual')">Add Manual</button>
+                        <button class="user-tab-btn" data-usertab="all-users" onclick="showUserTab('all-users')">View All Users</button>
+                    </div>
+                    
+                    <!-- Generate Guru Tab -->
+                    <div id="generate-guru" class="user-tab-content active">
+                        <div class="user-gen-card">
+                            <h3>Generate Guru Baru</h3>
+                            <form id="generateGuruForm" onsubmit="handleGenerateGuru(event)">
+                                <div class="form-group">
+                                    <label>Jumlah Guru:</label>
+                                    <input type="number" id="guruCount" class="form-control" min="1" max="100" value="5" required placeholder="Contoh: 10">
+                                </div>
+                                <button type="submit" class="btn btn-primary">GENERATE GURU</button>
+                            </form>
+                            
+                            <div id="guruResults" class="results-container" style="display: none;">
+                                <h4>HASIL GENERATED:</h4>
+                                <div class="table-container">
+                                    <table class="results-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Username</th>
+                                                <th>Password</th>
+                                                <th>Nama</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="guruResultsBody"></tbody>
+                                    </table>
+                                </div>
+                                <div class="action-buttons" style="margin-top: 16px;">
+                                    <button class="btn-copy" onclick="copyAllGuru()">📋 COPY ALL</button>
+                                    <button class="btn-export" onclick="exportGuruCSV()">📥 EXPORT CSV</button>
+                                    <button class="btn-save" onclick="saveAllGuru()">💾 SAVE TO DATABASE</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Generate Siswa Tab -->
+                    <div id="generate-siswa" class="user-tab-content">
+                        <div class="user-gen-card">
+                            <h3>Generate Siswa Baru</h3>
+                            <form id="generateSiswaForm" onsubmit="handleGenerateSiswa(event)">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Kelas:</label>
+                                        <select id="siswaClass" class="form-control" required>
+                                            <option value="">-- Pilih Kelas --</option>
+                                            <option value="XII IPA 1">XII IPA 1</option>
+                                            <option value="XII IPA 2">XII IPA 2</option>
+                                            <option value="XII IPS 1">XII IPS 1</option>
+                                            <option value="XII IPS 2">XII IPS 2</option>
+                                            <option value="XI IPA 1">XI IPA 1</option>
+                                            <option value="XI IPA 2">XI IPA 2</option>
+                                            <option value="XI IPS 1">XI IPS 1</option>
+                                            <option value="XI IPS 2">XI IPS 2</option>
+                                            <option value="X IPA 1">X IPA 1</option>
+                                            <option value="X IPA 2">X IPA 2</option>
+                                            <option value="X IPS 1">X IPS 1</option>
+                                            <option value="X IPS 2">X IPS 2</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Jumlah Siswa:</label>
+                                        <input type="number" id="siswaCount" class="form-control" min="1" max="100" value="10" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password Type:</label>
+                                        <select id="passwordType" class="form-control">
+                                            <option value="random">Random (Acak)</option>
+                                            <option value="named">Berdasarkan Nama</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">GENERATE SISWA</button>
+                            </form>
+                            
+                            <div id="siswaResults" class="results-container" style="display: none;">
+                                <h4>HASIL GENERATED:</h4>
+                                <div class="table-container">
+                                    <table class="results-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Username</th>
+                                                <th>Password</th>
+                                                <th>Nama</th>
+                                                <th>Class</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="siswaResultsBody"></tbody>
+                                    </table>
+                                </div>
+                                <div class="action-buttons" style="margin-top: 16px;">
+                                    <button class="btn-copy" onclick="copyAllSiswa()">📋 COPY ALL</button>
+                                    <button class="btn-export" onclick="exportSiswaCSV()">📥 EXPORT CSV</button>
+                                    <button class="btn-save" onclick="saveAllSiswa()">💾 SAVE TO DATABASE</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Template Import Tab -->
+                    <div id="template-import" class="user-tab-content">
+                        <div class="user-gen-card">
+                            <h3>📥 Import User dari Template</h3>
+                            
+                            <!-- Step 1: Download Template -->
+                            <div class="template-section">
+                                <h4>1️⃣ Download Template</h4>
+                                <p style="color: #6B7280; margin-bottom: 12px;">Download template kosong, isi nama guru/siswa, lalu upload kembali</p>
+                                <div class="template-download-buttons">
+                                    <button class="btn-download" onclick="downloadTemplateGuru()">📥 Download Template Guru (CSV)</button>
+                                    <button class="btn-download" onclick="downloadTemplateSiswa()">📥 Download Template Siswa (CSV)</button>
+                                </div>
+                            </div>
+                            
+                            <div style="border-top: 2px solid var(--color-border); margin: 24px 0;"></div>
+                            
+                            <!-- Step 2: Upload Template -->
+                            <div class="template-section">
+                                <h4>2️⃣ Upload Template yang Sudah Terisi</h4>
+                                <div class="form-group">
+                                    <label>Pilih File Template (.csv):</label>
+                                    <input type="file" id="templateFileInput" accept=".csv" class="form-control" onchange="handleTemplateFileSelect(event)" style="padding: 8px;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipe User:</label>
+                                    <select id="templateRoleSelect" class="form-control">
+                                        <option value="guru">Guru</option>
+                                        <option value="siswa">Siswa</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="processTemplateUpload()" style="margin-top: 12px;">⚡ Import &amp; Generate Password</button>
+                            </div>
+                            
+                            <div style="border-top: 2px solid var(--color-border); margin: 24px 0;"></div>
+                            
+                            <!-- Step 3: Preview Results -->
+                            <div id="templatePreviewSection" class="template-section" style="display: none;">
+                                <h4>3️⃣ Preview Hasil</h4>
+                                <div class="preview-success" style="margin-bottom: 16px;">
+                                    <span class="success-icon">✓</span>
+                                    <span class="success-text" id="templateSuccessMessage"></span>
+                                </div>
+                                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="results-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nama Lengkap</th>
+                                                <th>Username</th>
+                                                <th>Password</th>
+                                                <th>Kelas/Mapel</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="templatePreviewBody"></tbody>
+                                    </table>
+                                </div>
+                                <div class="action-buttons" style="margin-top: 16px;">
+                                    <button class="btn-copy" onclick="copyAllTemplateResults()">📋 COPY ALL</button>
+                                    <button class="btn-export" onclick="exportTemplateResultsCSV()">📥 EXPORT CSV</button>
+                                    <button class="btn-save" onclick="saveTemplateResults()">💾 SAVE TO DATABASE</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Import CSV Tab -->
+                    <div id="import-csv" class="user-tab-content">
+                        <div class="user-gen-card">
+                            <h3>Import User dari CSV</h3>
+                            <div class="upload-info">
+                                <p style="color: #6B7280; margin-bottom: 16px;">Format CSV: <strong>username,nama,role,subject/class,password</strong></p>
+                                <p style="color: #6B7280; font-size: 14px;">Contoh: guru1,Pak Ahmad,guru,Matematika,custom_pass</p>
+                            </div>
+                            <div class="upload-dropzone" id="userCsvDropzone" onclick="document.getElementById('userCsvInput').click()">
+                                <input type="file" id="userCsvInput" accept=".csv" style="display: none;" onchange="handleUserCsvSelect(event)">
+                                <div class="upload-icon">📄</div>
+                                <p class="upload-text">Drag &amp; Drop CSV file atau klik untuk browse</p>
+                                <p class="upload-subtext">Format: CSV (Max 10MB)</p>
+                            </div>
+                            <div id="csvImportResults" style="display: none; margin-top: 24px;">
+                                <h4>Preview Import:</h4>
+                                <div class="table-container">
+                                    <table class="results-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Nama</th>
+                                                <th>Role</th>
+                                                <th>Subject/Class</th>
+                                                <th>Password</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="csvImportBody"></tbody>
+                                    </table>
+                                </div>
+                                <button class="btn btn-primary" onclick="importCsvUsers()" style="margin-top: 16px;">IMPORT USERS</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Manual Tab -->
+                    <div id="add-manual" class="user-tab-content">
+                        <div class="user-gen-card">
+                            <h3>Add User Manual</h3>
+                            <form id="addManualUserForm" onsubmit="handleAddManualUser(event)">
+                                <div class="form-group">
+                                    <label>Username:</label>
+                                    <input type="text" id="manualUsername" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password:</label>
+                                    <input type="text" id="manualPassword" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Role:</label>
+                                    <select id="manualRole" class="form-control" required onchange="toggleManualFields()">
+                                        <option value="">-- Pilih Role --</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="guru">Guru</option>
+                                        <option value="siswa">Siswa</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nama:</label>
+                                    <input type="text" id="manualName" class="form-control" required>
+                                </div>
+                                <div class="form-group" id="manualSubjectGroup" style="display: none;">
+                                    <label>Mata Pelajaran:</label>
+                                    <input type="text" id="manualSubject" class="form-control">
+                                </div>
+                                <div class="form-group" id="manualClassGroup" style="display: none;">
+                                    <label>Kelas:</label>
+                                    <input type="text" id="manualClass" class="form-control">
+                                </div>
+                                <div class="action-buttons">
+                                    <button type="submit" class="btn btn-primary">ADD USER</button>
+                                    <button type="button" class="btn btn-secondary" onclick="resetManualForm()">RESET</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- View All Users Tab -->
+                    <div id="all-users" class="user-tab-content">
+                        <div class="user-gen-card">
+                            <h3>All Users</h3>
+                            <div class="filter-section">
+                                <select id="userRoleFilter" class="form-control" onchange="filterAllUsers()">
+                                    <option value="">All Roles</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="guru">Guru</option>
+                                    <option value="siswa">Siswa</option>
+                                </select>
+                                <input type="text" id="userSearchFilter" class="form-control" placeholder="Search username or name..." oninput="filterAllUsers()">
+                            </div>
+                            <div class="table-container">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Username</th>
+                                            <th>Role</th>
+                                            <th>Name</th>
+                                            <th>Subject/Class</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="allUsersBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Admin Account Settings Page -->
+                <div id="adminAccountSettings" class="admin-page">
+                    <h1>Pengaturan Akun Admin</h1>
+                    
+                    <div class="user-info">
+                        <div class="info-row">
+                            <label>Nama:</label>
+                            <span id="adminSettingsName">Admin Sekolah</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Username:</label>
+                            <span id="adminSettingsUsername">admin</span>
+                        </div>
+                        <div class="info-row">
+                            <label>Role:</label>
+                            <span style="background: #FEF3C7; color: #92400E; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">ADMIN</span>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top: 2px solid var(--color-border); margin: 24px 0;"></div>
+                    
+                    <div class="user-gen-card">
+                        <h3>🔐 Ganti Password Admin</h3>
+                        
+                        <form id="adminChangePasswordForm" onsubmit="handleAdminChangePassword(event)">
+                            <div class="form-group">
+                                <label>Password Saat Ini:</label>
+                                <div class="password-input">
+                                    <input 
+                                        type="password" 
+                                        id="adminCurrentPassword" 
+                                        class="form-control"
+                                        placeholder="Masukkan password admin saat ini"
+                                        required
+                                    >
+                                    <button type="button" class="btn btn-secondary" onclick="togglePasswordField('adminCurrentPassword')" style="min-width: 80px;">👁️ Show</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Password Baru:</label>
+                                <div class="password-input">
+                                    <input 
+                                        type="password" 
+                                        id="adminNewPassword" 
+                                        class="form-control"
+                                        placeholder="Masukkan password baru (minimal 6 karakter)"
+                                        required
+                                    >
+                                    <button type="button" class="btn btn-secondary" onclick="togglePasswordField('adminNewPassword')" style="min-width: 80px;">👁️ Show</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Konfirmasi Password Baru:</label>
+                                <div class="password-input">
+                                    <input 
+                                        type="password" 
+                                        id="adminConfirmPassword" 
+                                        class="form-control"
+                                        placeholder="Konfirmasi password baru"
+                                        required
+                                    >
+                                    <button type="button" class="btn btn-secondary" onclick="togglePasswordField('adminConfirmPassword')" style="min-width: 80px;">👁️ Show</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">✓ Ganti Password</button>
+                                <button type="reset" class="btn btn-secondary">↻ Reset Form</button>
+                            </div>
+                            
+                            <div id="adminPasswordSuccessMessage" style="display: none; background: #D1FAE5; color: #059669; padding: 12px; border-radius: 6px; margin-top: 16px; border-left: 4px solid #059669;">
+                                ✓ Password admin berhasil diubah!
+                            </div>
+                            <div id="adminPasswordErrorMessage" style="display: none; background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 6px; margin-top: 16px; border-left: 4px solid #DC2626;">
+                                ✗ Terjadi kesalahan. Silakan coba lagi.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Admin Password Management Page -->
+                <div id="adminPasswords" class="admin-page">
+                    <h1>Kelola Password Guru &amp; Siswa</h1>
+                    
+                    <div class="filter-section">
+                        <select id="passwordRoleFilter" class="form-control" onchange="filterPasswordUsers()">
+                            <option value="">Semua Role</option>
+                            <option value="guru">Guru</option>
+                            <option value="siswa">Siswa</option>
+                        </select>
+                        <input type="text" id="passwordSearchFilter" class="form-control" placeholder="Cari username atau nama..." oninput="filterPasswordUsers()">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Username</th>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Password</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminPasswordTableBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="admin-actions" style="margin-top: 24px;">
+                        <button class="btn btn-danger" onclick="resetAllPasswordsConfirm()">🔄 Reset Semua Password</button>
+                    </div>
+                </div>
+                
+                <!-- Download Center Page -->
+                <div id="adminDownloadCenter" class="admin-page">
+                    <h1>Download Soal &amp; Nilai</h1>
+                    
+                    <div class="user-gen-card">
+                        <h3>📥 Download Soal</h3>
+                        <p style="color: #6B7280; margin-bottom: 16px;">Download semua soal yang telah dibuat oleh guru</p>
+                        
+                        <div class="form-group">
+                            <label>Pilih Mata Pelajaran:</label>
+                            <select id="downloadSubjectFilter" class="form-control">
+                                <option value="">-- Semua Mata Pelajaran --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="downloadQuestionsPDF()">📄 Download PDF</button>
+                            <button class="btn btn-secondary" onclick="downloadQuestionsExcel()">📊 Download Excel</button>
+                        </div>
+                    </div>
+                    
+                    <div class="user-gen-card" style="margin-top: 24px;">
+                        <h3>📊 Download Rekapan Nilai Siswa</h3>
+                        <p style="color: #6B7280; margin-bottom: 16px;">Download hasil ujian dan nilai siswa</p>
+                        
+                        <div class="form-group">
+                            <label>Pilih Ujian:</label>
+                            <select id="downloadExamFilter" class="form-control">
+                                <option value="">-- Semua Ujian --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Pilih Kelas:</label>
+                            <select id="downloadClassFilter" class="form-control">
+                                <option value="">-- Semua Kelas --</option>
+                                <option value="X">Kelas X</option>
+                                <option value="XI">Kelas XI</option>
+                                <option value="XII">Kelas XII</option>
+                            </select>
+                        </div>
+                        
+                        <div id="gradePreview" style="margin: 20px 0; padding: 16px; background: var(--color-bg-1); border-radius: 8px;">
+                            <h4 style="margin-bottom: 12px;">Preview Data:</h4>
+                            <p id="gradePreviewText" style="color: #6B7280;">Pilih filter untuk melihat preview</p>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="downloadGradesExcel()">📊 Download Excel</button>
+                            <button class="btn btn-secondary" onclick="downloadGradesCSV()">📄 Download CSV</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Laporan & Export Page -->
+                <div id="adminReports" class="admin-page">
+                    <h1>Laporan &amp; Export</h1>
+                    <div class="report-section">
+                        <h3>Laporan Pelanggaran Siswa</h3>
+                        <button class="btn btn-primary" onclick="exportViolations()">📥 Export CSV</button>
+                    </div>
+                    <div class="report-section">
+                        <h3>Laporan Rekap Mapel</h3>
+                        <button class="btn btn-primary" onclick="exportSubjects()">📥 Export CSV</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Kelas</th>
+                                    <th>Soal</th>
+                                    <th>Jenis Pelanggaran</th>
+                                    <th>Waktu</th>
+                                    <th>Action Taken</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Student Detail Modal -->
+    <div id="studentDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2>Detail Ujian Siswa</h2>
+            <div id="studentDetailContent"></div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-danger" onclick="forceEndExam()">Force End Exam</button>
+                <button class="btn btn-secondary" onclick="closeStudentDetail()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard -->
+    <div id="teacherDashboard" class="page">
+        <nav class="navbar">
+            <div class="nav-brand" style="display: flex; align-items: center; gap: 12px;">
+                <button class="hamburger-menu" onclick="toggleMobileMenu('teacher')" style="display: none;" aria-label="Menu">☰</button>
+                Dashboard Guru
+            </div>
+            <div class="nav-user">
+                <span id="teacherName">Pak Ahmad</span>
+                <button class="btn btn-sm btn-logout" onclick="logout()">Keluar</button>
+            </div>
+        </nav>
+        
+        <div class="dashboard-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="createQuiz">Buat Soal</button>
+                <button class="tab-btn" data-tab="quizList">Daftar Soal</button>
+                <button class="tab-btn" data-tab="uploadDocument">Upload Soal dari Dokumen</button>
+                <button class="tab-btn" data-tab="studentResults">Hasil Siswa</button>
+            </div>
+            
+            <!-- Create Quiz Tab -->
+            <div id="createQuiz" class="tab-content active">
+                <h2>Buat Soal Baru</h2>
+                <form id="createQuizForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Judul Soal/Quiz</label>
+                            <input type="text" id="quizTitle" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Mata Pelajaran</label>
+                            <input type="text" id="quizSubject" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Durasi (menit)</label>
+                            <input type="number" id="quizDuration" class="form-control" min="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Jenis Soal</label>
+                            <select id="questionType" class="form-control">
+                                <option value="multiple_choice">Pilihan Ganda</option>
+                                <option value="essay">Essay</option>
+                                <option value="true_false">Benar/Salah</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="multimedia-section">
+                        <h3>Multimedia (Opsional)</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>URL Video</label>
+                                <input type="text" id="videoUrl" class="form-control" placeholder="https://example.com/video.mp4">
+                            </div>
+                            <div class="form-group">
+                                <label>URL Audio</label>
+                                <input type="text" id="audioUrl" class="form-control" placeholder="https://example.com/audio.mp3">
+                            </div>
+                            <div class="form-group">
+                                <label>URL Dokumen</label>
+                                <input type="text" id="documentUrl" class="form-control" placeholder="https://example.com/doc.pdf">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="questions-section">
+                        <h3>Pertanyaan</h3>
+                        <div id="questionsContainer"></div>
+                        <button type="button" class="btn btn-secondary" onclick="addQuestion()">+ Tambah Pertanyaan</button>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Simpan Soal</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Quiz List Tab -->
+            <div id="quizList" class="tab-content">
+                <h2>Daftar Soal</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Judul</th>
+                                <th>Mata Pelajaran</th>
+                                <th>Durasi</th>
+                                <th>Jumlah Soal</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quizListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Upload Document Tab -->
+            <div id="uploadDocument" class="tab-content">
+                <h2>Upload Soal dari Dokumen</h2>
+                <div class="upload-section">
+                    <div class="upload-info">
+                        <p style="color: #6B7280; margin-bottom: 16px;">Didukung format: <strong>PDF, Word (.docx), Text (.txt), atau CSV (.csv)</strong></p>
+                        <p style="color: #6B7280; font-size: 14px;">Platform akan otomatis mendeteksi jenis soal, pilihan jawaban, dan jawaban yang benar.</p>
+                    </div>
+                    
+                    <div class="upload-dropzone" id="uploadDropzone" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.csv" style="display: none;" onchange="handleFileSelect(event)">
+                        <div class="upload-icon">📄</div>
+                        <p class="upload-text">Drag &amp; Drop file di sini atau klik untuk browse</p>
+                        <p class="upload-subtext">Format: PDF, DOCX, TXT, atau CSV (Max 50MB)</p>
+                    </div>
+                    
+                    <div id="uploadFormSection" style="display: none;">
+                        <div class="form-grid" style="margin-top: 24px;">
+                            <div class="form-group">
+                                <label>Nama Soal (Quiz)</label>
+                                <input type="text" id="uploadQuizTitle" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Mata Pelajaran</label>
+                                <input type="text" id="uploadQuizSubject" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Durasi (menit)</label>
+                                <input type="number" id="uploadQuizDuration" class="form-control" min="1" required>
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <p id="selectedFileName" style="font-weight: 600; color: var(--color-primary);"></p>
+                        </div>
+                        <button class="btn btn-primary" onclick="processDocument()" style="margin-top: 16px;">PROSES &amp; PARSE DOKUMEN</button>
+                    </div>
+                </div>
+                
+                <!-- Preview Results Section -->
+                <div id="previewSection" style="display: none;">
+                    <div class="preview-header">
+                        <h2>Preview Hasil Parsing</h2>
+                        <div class="preview-success">
+                            <span class="success-icon">✓</span>
+                            <span class="success-text">Parsing Berhasil!</span>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-statistics">
+                        <h3>📊 STATISTIK:</h3>
+                        <div class="stats-list">
+                            <div class="stat-row">• Total Soal Terdeteksi: <strong id="statTotalQuestions">0</strong></div>
+                            <div class="stat-row">• Pilihan Ganda: <strong id="statMCQ">0</strong> soal</div>
+                            <div class="stat-row">• Benar/Salah: <strong id="statTrueFalse">0</strong> soal</div>
+                            <div class="stat-row">• Essay: <strong id="statEssay">0</strong> soal</div>
+                            <div class="stat-row">• Rata-rata Confidence: <strong id="statConfidence">0</strong>%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-filters">
+                        <label style="font-weight: 600; margin-right: 12px;">Filter:</label>
+                        <select id="filterQuestionType" class="form-control" style="width: auto; display: inline-block;" onchange="filterPreviewQuestions()">
+                            <option value="">Semua Jenis</option>
+                            <option value="PILIHAN_GANDA">Pilihan Ganda</option>
+                            <option value="BENAR_SALAH">Benar/Salah</option>
+                            <option value="ESSAY">Essay</option>
+                        </select>
+                    </div>
+                    
+                    <div class="preview-questions" id="previewQuestions">
+                        <!-- Questions will be rendered here -->
+                    </div>
+                    
+                    <div class="preview-actions">
+                        <button class="btn btn-secondary" onclick="cancelUpload()">BATAL</button>
+                        <button class="btn btn-primary" onclick="saveAllQuestions()">SIMPAN SEMUA SOAL</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Results Tab -->
+            <div id="studentResults" class="tab-content">
+                <h2>Hasil Siswa</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Siswa</th>
+                                <th>Kelas</th>
+                                <th>Soal</th>
+                                <th>Nilai</th>
+                                <th>Waktu Pengerjaan</th>
+                                <th>Pelanggaran</th>
+                                <th>Status Proctoring</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="studentDashboard" class="page">
+        <nav class="navbar">
+            <div class="nav-brand" style="display: flex; align-items: center; gap: 12px;">
+                <button class="hamburger-menu" onclick="toggleMobileMenu('student')" style="display: none;" aria-label="Menu">☰</button>
+                Dashboard Siswa
+            </div>
+            <div class="nav-user">
+                <span id="studentName">Siswa</span>
+                <button class="btn btn-sm btn-logout" onclick="logout()">Keluar</button>
+            </div>
+        </nav>
+        
+        <div class="dashboard-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="availableQuizzes">Soal Tersedia</button>
+                <button class="tab-btn" data-tab="quizHistory">Riwayat</button>
+            </div>
+            
+            <!-- Available Quizzes -->
+            <div id="availableQuizzes" class="tab-content active">
+                <h2>Soal Tersedia</h2>
+                <div id="quizzesGrid" class="quizzes-grid"></div>
+            </div>
+            
+            <!-- Quiz History -->
+            <div id="quizHistory" class="tab-content">
+                <h2>Riwayat Pengerjaan</h2>
+                <div id="historyContainer" class="history-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Taking Page -->
+    <div id="quizTakingPage" class="page">
+        <!-- Face Verification Page -->
+        <div id="faceVerificationPage" class="face-verification-container" style="display: none;">
+            <div class="face-verification-card">
+                <h2>Verifikasi Wajah</h2>
+                <div class="privacy-notice">
+                    <h3>🔒 Kebijakan Privasi</h3>
+                    <p>Platform menggunakan deteksi wajah untuk verifikasi anti-kecurangan. Data wajah tidak disimpan setelah ujian. Hanya deteksi kehadiran, bukan face recognition.</p>
+                </div>
+                <div id="cameraPermissionSection">
+                    <div style="text-align: left; margin: 20px 0; padding: 16px; background: #EEF2FF; border-radius: 8px;">
+                        <p style="margin-bottom: 12px; font-weight: 600;">📸 Akses Kamera Diperlukan</p>
+                        <p style="margin-bottom: 8px; font-size: 14px;">Platform memerlukan akses kamera untuk verifikasi wajah anti-kecurangan. Izin ini hanya digunakan saat ujian berlangsung.</p>
+                        <p style="font-size: 13px; color: #6B7280;">ℹ️ Jika kamera tidak dapat diakses, Anda akan diberikan opsi alternatif (mode demo atau tanpa face detection).</p>
+                    </div>
+                    <div style="text-align: left; margin: 20px 0; padding: 12px; background: #FEF3C7; border-radius: 8px; border-left: 4px solid #F59E0B;">
+                        <p style="margin: 0; font-size: 13px; color: #78350F;">💡 <strong>Tips:</strong> Saat browser meminta izin, klik <strong>"Izinkan"</strong> atau <strong>"Allow"</strong></p>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="requestCameraPermission()">Minta Akses Kamera</button>
+                </div>
+                <div id="cameraPreviewSection" style="display: none;">
+                    <div class="camera-preview-container">
+                        <video id="faceVerificationVideo" autoplay playsinline muted preload="auto"></video>
+                        <canvas id="faceVerificationCanvas"></canvas>
+                        <div id="faceStatusIndicator" class="face-status-indicator">Memuat...</div>
+                    </div>
+                    <div class="verification-instructions">
+                        <p style="font-size: 14px; color: #6B7280;">📸 Posisikan wajah Anda di dalam kotak</p>
+                        <p style="font-size: 14px; color: #6B7280;">💡 Pastikan pencahayaan cukup dan wajah terlihat jelas</p>
+                        <p id="stabilityMessage" style="color: var(--color-warning); font-weight: 600; margin-top: 12px;">Menunggu wajah stabil...</p>
+                    </div>
+                    <button id="proceedToExamBtn" class="btn btn-primary btn-full" onclick="proceedToExam()" disabled>Lanjut ke Ujian</button>
+                </div>
+            </div>
+        </div>
+        <!-- Student Identity Form -->
+        <div id="studentIdentityForm" class="identity-form-container">
+            <div class="identity-card">
+                <h2>Verifikasi Identitas</h2>
+                <p>Masukkan nama dan kelas Anda sebelum memulai ujian</p>
+                <form id="identityForm">
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="studentNameInput" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kelas</label>
+                        <input type="text" id="studentClassInput" class="form-control" required>
+                    </div>
+                    <div class="warning-box">
+                        <h3>⚠️ PERHATIAN!</h3>
+                        <ul>
+                            <li>Ujian akan dimulai dalam mode <strong>fullscreen</strong></li>
+                            <li>Jangan berpindah tab atau aplikasi lain</li>
+                            <li>Maksimal <strong>5 kali pelanggaran</strong></li>
+                            <li>Setelah 5 pelanggaran, ujian akan otomatis berakhir</li>
+                            <li>Anda harus login ulang dan semua jawaban akan hilang</li>
+                        </ul>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Saya Mengerti dan Siap Memulai</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quiz Interface -->
+        <div id="quizInterface" class="quiz-interface" style="display: none;">
+            <!-- Face Detection Preview -->
+            <div id="faceMonitoringPreview" class="face-monitoring-preview">
+                <div class="face-preview-header">
+                    <span id="faceMonitorStatus" class="face-monitor-status">✓ Wajah Terdeteksi</span>
+                    <button class="btn-collapse" onclick="toggleFacePreview()" title="Toggle Preview (Alt+F)">−</button>
+                </div>
+                <div class="face-preview-content">
+                    <video id="examFaceVideo" autoplay playsinline muted preload="auto"></video>
+                    <canvas id="examFaceCanvas"></canvas>
+                </div>
+            </div>
+            <div class="quiz-header">
+                <div class="quiz-info">
+                    <h2 id="quizTitleDisplay">Judul Quiz</h2>
+                    <span id="studentInfo">Nama - Kelas</span>
+                </div>
+                <div class="timer-container">
+                    <div class="timer" id="timer">00:00</div>
+                    <div class="violations" id="violations">Tab: 0/5 | Wajah: 0/5</div>
+                </div>
+            </div>
+            
+            <div class="quiz-body">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="multimedia-content" id="multimediaContent"></div>
+                
+                <div class="question-navigation" id="questionNavigation"></div>
+                
+                <div class="question-container" id="questionContainer"></div>
+                
+                <div class="quiz-actions">
+                    <button class="btn btn-secondary" id="prevBtn" onclick="navigateQuestion(-1)">← Sebelumnya</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="navigateQuestion(1)">Selanjutnya →</button>
+                    <button class="btn btn-success" id="submitBtn" onclick="submitQuiz()" style="display: none;">Selesai &amp; Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Page -->
+    <div id="resultsPage" class="page">
+        <div class="results-container">
+            <div class="results-card">
+                <h1>Hasil Pengerjaan</h1>
+                <div id="resultsContent"></div>
+                <button class="btn btn-primary" onclick="backToStudentDashboard()">Kembali ke Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="warningModal" class="modal">
+        <div class="modal-content warning">
+            <h2>⚠️ PERINGATAN!</h2>
+            <p id="warningMessage"></p>
+            <button class="btn btn-primary" onclick="closeWarningModal()">Saya Mengerti</button>
+        </div>
+    </div>
+
+    <div id="violationModal" class="modal">
+        <div class="modal-content danger">
+            <h2>❌ UJIAN BERAKHIR</h2>
+            <p id="violationEndReason">Anda telah melakukan 3 kali pelanggaran.</p>
+            <p>Jawaban Anda telah disubmit otomatis.</p>
+            <p>Silakan login ulang untuk mencoba lagi.</p>
+            <button class="btn btn-danger" onclick="forceLogout()">Kembali ke Login</button>
+        </div>
+    </div>
+
+    <div id="faceViolationModal" class="modal">
+        <div class="modal-content warning face-warning-modal">
+            <div class="warning-icon">⚠️</div>
+            <h2 id="faceViolationTitle">PERINGATAN DETEKSI WAJAH!</h2>
+            <p id="faceViolationMessage"></p>
+            <button class="btn btn-primary" onclick="closeFaceViolationModal()">Saya Mengerti, Lanjutkan Ujian</button>
+        </div>
+    </div>
+
+    <div id="cameraErrorModal" class="modal">
+        <div class="modal-content danger">
+            <h2>⚠️ Kamera Tidak Dapat Diakses</h2>
+            <p id="cameraErrorMessage"></p>
+            <div id="errorSolutions" style="text-align: left; margin: 20px 0; padding: 16px; background: #FEF3C7; border-radius: 8px;">
+                <p style="font-weight: 600; margin-bottom: 8px;">Solusi:</p>
+                <ol style="margin-left: 20px; color: #78350F;">
+                    <li>Jalankan aplikasi dari localhost (bukan file system)</li>
+                    <li>Gunakan HTTPS saat production</li>
+                    <li>Atau pilih salah satu opsi di bawah</li>
+                </ol>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" onclick="retryCamera()">🔄 Coba Lagi</button>
+                <button class="btn btn-secondary" onclick="useDemoMode()">🎭 Gunakan Mode Demo</button>
+                <button class="btn btn-secondary" onclick="skipFaceDetection()">➡️ Lanjut Tanpa Face Detection</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="demoModeInfoModal" class="modal">
+        <div class="modal-content" style="border: 3px solid #10B981;">
+            <h2>🎭 Mode Demo Face Detection</h2>
+            <div style="text-align: left; margin: 20px 0;">
+                <p style="margin-bottom: 12px;"><strong>Mode Demo Aktif:</strong> Simulasi face detection tanpa webcam asli.</p>
+                <div style="background: #EEF2FF; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+                    <p style="font-weight: 600; margin-bottom: 8px;">⌨️ Keyboard Shortcuts untuk Testing:</p>
+                    <ul style="margin-left: 20px; line-height: 1.8;">
+                        <li><kbd>Alt+1</kbd>: Trigger NO_FACE violation</li>
+                        <li><kbd>Alt+2</kbd>: Trigger MULTIPLE_FACES violation</li>
+                        <li><kbd>Alt+3</kbd>: Trigger LOW_CONFIDENCE violation</li>
+                        <li><kbd>Alt+C</kbd>: Clear all violations</li>
+                        <li><kbd>Alt+F</kbd>: Toggle face preview (saat ujian)</li>
+                    </ul>
+                </div>
+                <div style="background: #FEF3C7; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <p style="margin: 0; font-size: 13px; color: #78350F;"><strong>💡 Tips:</strong> Gunakan demo mode untuk testing fitur anti-kecurangan tanpa perlu webcam fisik.</p>
+                </div>
+                
+                <!-- Admin QR Code Page -->
+                <div id="adminQRCodes" class="admin-page">
+                    <h1>🔐 QR Code Generator untuk Login</h1>
+                    <p style="color: #6B7280; margin-bottom: 24px;">Admin dapat generate QR code untuk masing-masing role. User scan QR dan langsung ke login page.</p>
+                    
+                    <div class="qr-grid-container">
+                        <!-- ADMIN QR CODE -->
+                        <div class="qr-card">
+                            <div class="qr-header">
+                                <span class="role-badge role-admin">Admin</span>
+                                <h3>QR Code - Admin Login</h3>
+                            </div>
+                            
+                            <div class="qr-info">
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">Role:</span> Admin
+                                </div>
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">URL:</span>
+                                    <code id="urlAdmin" style="font-size: 11px; background: white; padding: 4px; border-radius: 4px;"></code>
+                                </div>
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">Pre-fill:</span> Role = admin
+                                </div>
+                            </div>
+                            
+                            <div class="qr-code-display" id="qrAdminContainer"></div>
+                            
+                            <div class="qr-actions">
+                                <button class="qr-btn qr-btn-download" onclick="downloadQRCode('admin')">
+                                    📥 Download PNG
+                                </button>
+                                <button class="qr-btn qr-btn-print" onclick="printQRCode('admin')">
+                                    🖨️ Print
+                                </button>
+                                <button class="qr-btn qr-btn-copy" onclick="copyURLToClipboard('admin')">
+                                    📋 Copy URL
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- GURU QR CODE -->
+                        <div class="qr-card">
+                            <div class="qr-header">
+                                <span class="role-badge role-guru">Guru</span>
+                                <h3>QR Code - Guru Login</h3>
+                            </div>
+                            
+                            <div class="qr-info">
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">Role:</span> Guru
+                                </div>
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">URL:</span>
+                                    <code id="urlGuru" style="font-size: 11px; background: white; padding: 4px; border-radius: 4px;"></code>
+                                </div>
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">Pre-fill:</span> Role = guru
+                                </div>
+                            </div>
+                            
+                            <div class="qr-code-display" id="qrGuruContainer"></div>
+                            
+                            <div class="qr-actions">
+                                <button class="qr-btn qr-btn-download" onclick="downloadQRCode('guru')">
+                                    📥 Download PNG
+                                </button>
+                                <button class="qr-btn qr-btn-print" onclick="printQRCode('guru')">
+                                    🖨️ Print
+                                </button>
+                                <button class="qr-btn qr-btn-copy" onclick="copyURLToClipboard('guru')">
+                                    📋 Copy URL
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- SISWA QR CODE -->
+                        <div class="qr-card">
+                            <div class="qr-header">
+                                <span class="role-badge role-siswa">Siswa</span>
+                                <h3>QR Code - Siswa Login</h3>
+                            </div>
+                            
+                            <div class="qr-info">
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">Role:</span> Siswa
+                                </div>
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">URL:</span>
+                                    <code id="urlSiswa" style="font-size: 11px; background: white; padding: 4px; border-radius: 4px;"></code>
+                                </div>
+                                <div class="qr-info-item">
+                                    <span class="qr-info-label">Pre-fill:</span> Role = siswa
+                                </div>
+                            </div>
+                            
+                            <div class="qr-code-display" id="qrSiswaContainer"></div>
+                            
+                            <div class="qr-actions">
+                                <button class="qr-btn qr-btn-download" onclick="downloadQRCode('siswa')">
+                                    📥 Download PNG
+                                </button>
+                                <button class="qr-btn qr-btn-print" onclick="printQRCode('siswa')">
+                                    🖨️ Print
+                                </button>
+                                <button class="qr-btn qr-btn-copy" onclick="copyURLToClipboard('siswa')">
+                                    📋 Copy URL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- BULK ACTIONS -->
+                    <div class="bulk-actions-section">
+                        <h2>Bulk Actions:</h2>
+                        <div class="bulk-actions">
+                            <button class="bulk-btn bulk-btn-download" onclick="downloadAllQRCodes()">
+                                📥 Download All QR Codes
+                            </button>
+                            <button class="bulk-btn bulk-btn-print" onclick="printAllQRCodes()">
+                                🖨️ Print All QR Codes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: #6B7280; font-size: 14px;">⚠️ Dalam production, face detection akan menggunakan webcam asli dengan MediaPipe.</p>
+            </div>
+            <button class="btn btn-primary" onclick="closeDemoModeInfo()">Mengerti, Lanjutkan</button>
+        </div>
+    </div>
+
+    <!-- Edit Question Modal -->
+    <div id="editQuestionModal" class="edit-modal">
+        <div class="edit-modal-content">
+            <h3>Edit Pertanyaan</h3>
+            <div class="form-group">
+                <label>Pertanyaan</label>
+                <textarea id="editQuestionText" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Jawaban Benar</label>
+                <input type="text" id="editCorrectAnswer" class="form-control">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Batal</button>
+                <button class="btn btn-primary" onclick="saveEditedQuestion()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+    // Register Service Worker for PWA and Offline Support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('✓ Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+    </script>
+</body>
+</html>

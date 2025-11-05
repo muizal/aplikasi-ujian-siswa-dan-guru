@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator</title>
+
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    body {
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .qr-box {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .qr-box h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .role-label {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .role-admin {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-guru {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .role-siswa {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .qr-info {
+      background: #f9fafb;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .qr-display {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+      min-height: 330px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-display canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .btn-download {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-download:hover {
+      background: #2563eb;
+    }
+
+    .btn-print {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-print:hover {
+      background: #059669;
+    }
+
+    .btn-copy {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-copy:hover {
+      background: #d97706;
+    }
+
+    .bulk-section {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .bulk-section h2 {
+      margin-bottom: 15px;
+    }
+
+    .bulk-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-bulk {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-bulk-download {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-bulk-download:hover {
+      background: #5568d3;
+    }
+
+    .btn-bulk-print {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .btn-bulk-print:hover {
+      background: #7c3aed;
+    }
+
+    .status {
+      text-align: center;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+
+    @media (max-width: 768px) {
+      .qr-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 QR Code Generator</h1>
+    <p class="subtitle">Generate QR codes untuk login Admin, Guru, dan Siswa</p>
+
+    <div class="status success" id="status"></div>
+
+    <div class="qr-grid">
+      <!-- ADMIN -->
+      <div class="qr-box">
+        <span class="role-label role-admin">ADMIN</span>
+        <h2>Admin Login</h2>
+
+        <div class="qr-info">
+          <strong>Role:</strong> Admin<br>
+          <strong>URL:</strong> /login?role=admin
+        </div>
+
+        <div class="qr-display" id="qr-admin">
+          Generating...
+        </div>
+
+        <div class="buttons">
+          <button class="btn-download" onclick="downloadQR('admin')">📥 Download</button>
+          <button class="btn-print" onclick="printQR('admin')">🖨️ Print</button>
+          <button class="btn-copy" onclick="copyURL('admin')">📋 Copy</button>
+        </div>
+      </div>
+
+      <!-- GURU -->
+      <div class="qr-box">
+        <span class="role-label role-guru">GURU</span>
+        <h2>Guru Login</h2>
+
+        <div class="qr-info">
+          <strong>Role:</strong> Guru<br>
+          <strong>URL:</strong> /login?role=guru
+        </div>
+
+        <div class="qr-display" id="qr-guru">
+          Generating...
+        </div>
+
+        <div class="buttons">
+          <button class="btn-download" onclick="downloadQR('guru')">📥 Download</button>
+          <button class="btn-print" onclick="printQR('guru')">🖨️ Print</button>
+          <button class="btn-copy" onclick="copyURL('guru')">📋 Copy</button>
+        </div>
+      </div>
+
+      <!-- SISWA -->
+      <div class="qr-box">
+        <span class="role-label role-siswa">SISWA</span>
+        <h2>Siswa Login</h2>
+
+        <div class="qr-info">
+          <strong>Role:</strong> Siswa<br>
+          <strong>URL:</strong> /login?role=siswa
+        </div>
+
+        <div class="qr-display" id="qr-siswa">
+          Generating...
+        </div>
+
+        <div class="buttons">
+          <button class="btn-download" onclick="downloadQR('siswa')">📥 Download</button>
+          <button class="btn-print" onclick="printQR('siswa')">🖨️ Print</button>
+          <button class="btn-copy" onclick="copyURL('siswa')">📋 Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BULK SECTION -->
+    <div class="bulk-section">
+      <h2>📦 Bulk Actions</h2>
+      <div class="bulk-buttons">
+        <button class="btn-bulk btn-bulk-download" onclick="downloadAll()">
+          📥 Download Semua
+        </button>
+        <button class="btn-bulk btn-bulk-print" onclick="printAll()">
+          🖨️ Print Semua
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data untuk QR codes
+    const roles = {
+      admin: { label: 'Admin', url: window.location.origin + '/login?role=admin' },
+      guru: { label: 'Guru', url: window.location.origin + '/login?role=guru' },
+      siswa: { label: 'Siswa', url: window.location.origin + '/login?role=siswa' }
+    };
+
+    // Generate semua QR codes saat page load
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Page loaded, generating QR codes...');
+      generateAllQRCodes();
+    });
+
+    function generateAllQRCodes() {
+      console.log('Starting QR code generation...');
+
+      Object.keys(roles).forEach(role => {
+        try {
+          const containerId = 'qr-' + role;
+          const container = document.getElementById(containerId);
+          const url = roles[role].url;
+
+          // Clear container
+          container.innerHTML = '';
+
+          // Generate QR code
+          new QRCode(container, {
+            text: url,
+            width: 300,
+            height: 300,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H,
+            useSVG: false
+          });
+
+          console.log('✓ QR code generated for', role);
+        } catch (error) {
+          console.error('Error generating QR for', role, error);
+          document.getElementById('qr-' + role).innerHTML = 'Error generating QR code';
+        }
+      });
+    }
+
+    function downloadQR(role) {
+      try {
+        const container = document.getElementById('qr-' + role);
+        const canvas = container.querySelector('canvas');
+
+        if (!canvas) {
+          alert('QR code belum selesai generate');
+          return;
+        }
+
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'QR_' + role.toUpperCase() + '.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showStatus('✓ QR code ' + role + ' berhasil didownload');
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    function printQR(role) {
+      try {
+        const container = document.getElementById('qr-' + role);
+        const canvas = container.querySelector('canvas');
+
+        if (!canvas) {
+          alert('QR code belum selesai generate');
+          return;
+        }
+
+        const win = window.open('', '', 'width=600,height=700');
+        const img = canvas.toDataURL('image/png');
+
+        win.document.write('<html><head><title>QR Code - ' + role.toUpperCase() + '</title></head>');
+        win.document.write('<body style="text-align:center; padding:40px;">');
+        win.document.write('<h2>QR Code - ' + role.toUpperCase() + '</h2>');
+        win.document.write('<img src="' + img + '" style="max-width:400px;"><br><br>');
+        win.document.write('<p>Scan QR code untuk login sebagai ' + role + '</p>');
+        win.document.write('</body></html>');
+        win.document.close();
+
+        setTimeout(() => win.print(), 250);
+
+        showStatus('✓ QR code ' + role + ' dikirim ke printer');
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    function copyURL(role) {
+      try {
+        const url = roles[role].url;
+        navigator.clipboard.writeText(url).then(() => {
+          showStatus('✓ URL ' + role + ' dicopy ke clipboard');
+        }).catch(() => {
+          const textarea = document.createElement('textarea');
+          textarea.value = url;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showStatus('✓ URL ' + role + ' dicopy');
+        });
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    function downloadAll() {
+      showStatus('Downloading all QR codes...');
+      setTimeout(() => downloadQR('admin'), 300);
+      setTimeout(() => downloadQR('guru'), 1000);
+      setTimeout(() => downloadQR('siswa'), 1700);
+    }
+
+    function printAll() {
+      const win = window.open('', '', 'width=900,height=1200');
+
+      let html = '<html><head><title>QR Codes</title><style>';
+      html += 'body { font-family: Arial; padding: 40px; }';
+      html += '.header { text-align: center; margin-bottom: 40px; }';
+      html += '.item { text-align: center; margin-bottom: 60px; page-break-inside: avoid; }';
+      html += '.item img { max-width: 400px; }';
+      html += '.divider { border-bottom: 1px solid #ccc; margin: 40px 0; }';
+      html += '</style></head><body>';
+      html += '<div class="header"><h1>QR Codes - Platform Soal Online</h1></div>';
+
+      const roles_list = ['admin', 'guru', 'siswa'];
+      roles_list.forEach((role, idx) => {
+        try {
+          const container = document.getElementById('qr-' + role);
+          const canvas = container.querySelector('canvas');
+
+          if (canvas) {
+            const img = canvas.toDataURL('image/png');
+            html += '<div class="item">';
+            html += '<h2>' + role.toUpperCase() + '</h2>';
+            html += '<img src="' + img + '" />';
+            html += '<p>Scan untuk login sebagai ' + role + '</p>';
+            html += '</div>';
+
+            if (idx < roles_list.length - 1) {
+              html += '<div class="divider"></div>';
+            }
+          }
+        } catch (e) {
+          console.error('Error processing', role);
+        }
+      });
+
+      html += '</body></html>';
+      win.document.write(html);
+      win.document.close();
+
+      setTimeout(() => win.print(), 500);
+      showStatus('✓ QR codes dikirim ke printer');
+    }
+
+    function showStatus(msg) {
+      const status = document.getElementById('status');
+      status.textContent = msg;
+      status.classList.add('show');
+
+      setTimeout(() => {
+        status.classList.remove('show');
+      }, 3000);
+    }
+
+    // Log untuk debugging
+    console.log('QR Code Generator Script Loaded');
+    console.log('Roles:', roles);
+  </script>
+</body>
+</html>
